@@ -1,0 +1,28 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}Список постов{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Список постов</h1>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link {% if request.path == '/posts/published_post_list/' %}active{% endif %}" href="{% url 'blog:published_post_list' %}">Опубликованные</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.path == '/posts/unpublished_post_list/' %}active{% endif %}" href="{% url 'blog:unpublished_post_list' %}">Неопубликованные</a>
+        </li>
+    </ul>
+    <div class="list-group mt-3">
+        {% for post in posts %}
+            <a href="{% url 'blog:post_detail' post.pk %}" class="list-group-item list-group-item-action">
+                <h5 class="mb-1">{{ post.title }}</h5>
+                <small>Дата создания: {{ post.created_at|date:"d.m.Y H:i" }}</small>
+            </a>
+        {% empty %}
+            <p>Посты отсутствуют.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
