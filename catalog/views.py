@@ -1,16 +1,16 @@
+from django.http import Http404
 from django.shortcuts import render
 from catalog.models import Product
 
 
 def home(request):
-    # Получаем последние 5 созданных продуктов
     latest_products = Product.objects.order_by('-created_at')[:5]
+    products = Product.objects.all()
 
-    # Выводим их в консоль
-    for product in latest_products:
-        print(product.name)  # Выводим имя продукта в консоль
-
-    return render(request, "./catalog/home.html", {"latest_products": latest_products})
+    return render(request, "catalog/home.html", {
+        "latest_products": latest_products,
+        "products": products,
+    })
 
 
 def contacts(request):
@@ -23,3 +23,18 @@ def contacts(request):
         message = "Ваше сообщение успешно отправлено!"
 
     return render(request, "./catalog/contacts.html", {"message": message})
+
+
+def products_list(request,):
+    products = Product.objects.all()
+    context = {'products': products}
+    return render(request, 'catalog/products_list.html', context)
+
+
+def product_detail(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        raise Http404("Продукт не найден")
+    context = {'product': product}
+    return render(request, 'catalog/product_detail.html', context)

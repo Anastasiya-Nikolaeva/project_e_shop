@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Продукт</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">{{ product.name }}</h1>
+        <p>Название: {{ product.name }}</p>
+        <p>Описание: {{ product.description }}</p>
+
+        <p>Фото:
+            {% if product.photo %}
+                <img src="{{ product.photo.url }}" alt="{{ product.name }}">
+            {% else %}
+                {% load static %}  <!-- Загрузка тега static -->
+                <img src="{% static 'path/to/placeholder.jpg' %}" alt="Изображение не доступно" class="product-photo">
+            {% endif %}
+        </p>
+
+        <p>Категория: {{ product.category }}</p>
+        <p>Цена: {{ product.price }}</p>
+    </div>
+    <script src='/static/js/bundle.min.js'></script>
+</body>
+</html>
