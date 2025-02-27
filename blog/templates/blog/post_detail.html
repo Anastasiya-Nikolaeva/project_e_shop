@@ -1,0 +1,21 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.content }}</p>
+    <p>Дата создания: {{ post.created_at|date:"d.m.Y H:i" }}</p>
+    <p>Просмотры: {{ post.views_count }}</p>
+
+    {% if post.preview_image %}
+        <img src="{{ post.preview_image.url }}" alt="Изображение поста" class="img-fluid mb-3">
+    {% endif %}
+
+    <a href="{% url 'blog:post_update' post.pk %}" class="btn btn-warning">Редактировать</a>
+    <a href="{% url 'blog:post_delete' post.pk %}" class="btn btn-danger">Удалить</a>
+    <a href="{% url 'blog:unpublished_post_list' %}" class="btn btn-secondary">Назад к списку постов</a>
+</div>
+{% endblock %}
