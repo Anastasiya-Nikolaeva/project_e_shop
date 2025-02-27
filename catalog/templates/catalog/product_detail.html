@@ -1,29 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Продукт</title>
+    <title>{{ product.name }} - Продукт</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <style>
+        .product-photo {
+            max-width: 100%; /* Ограничение ширины изображения */
+            height: auto; /* Автоматическая высота для сохранения пропорций */
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">{{ product.name }}</h1>
-        <p>Название: {{ product.name }}</p>
-        <p>Описание: {{ product.description }}</p>
+        <p class="lead">Описание: {{ product.description }}</p>
 
-        <p>Фото:
+        <div class="mb-4">
+            <p>Фото:</p>
             {% if product.photo %}
-                <img src="{{ product.photo.url }}" alt="{{ product.name }}">
+                <img src="{{ product.photo.url }}" alt="{{ product.name }}" class="product-photo">
             {% else %}
-                {% load static %}  <!-- Загрузка тега static -->
+                {% load static %}
                 <img src="{% static 'path/to/placeholder.jpg' %}" alt="Изображение не доступно" class="product-photo">
             {% endif %}
-        </p>
+        </div>
 
-        <p>Категория: {{ product.category }}</p>
-        <p>Цена: {{ product.price }}</p>
+        <p>Категория: {{ product.category.name }}</p>
+        <p>Цена: {{ product.price }} руб.</p>
+
+        <div class="mt-4 mb-4">
+            <a href="{% url 'catalog:products_list' %}" class="btn btn-primary">К списку продуктов</a>
+            <a href="{% url 'catalog:product_edit' product.id %}" class="btn btn-warning">Редактировать</a>
+            <a href="{% url 'catalog:product_delete' product.id %}" class="btn btn-danger">Удалить</a>
+        </div>
     </div>
-    <script src='/static/js/bundle.min.js'></script>
+    <script src='/static/js/bootstrap.bundle.min.js'></script>
 </body>
 </html>
