@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Мой блог{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"> <!-- Подключение Bootstrap CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa; /* Светлый фон для контраста */
+        }
+        header, footer {
+            text-align: center;
+            padding: 20px 0;
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin: 0 15px;
+        }
+        main {
+            max-width: 800px; /* Максимальная ширина для контента */
+            margin: 0 auto; /* Центрирование */
+            padding: 20px;
+            background-color: #ffffff; /* Белый фон для контента */
+            border-radius: 8px; /* Закругленные углы */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Тень для эффекта поднятости */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Добро пожаловать в мой блог</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'blog:published_post_list' %}">Опубликованные посты</a></li>
+                <li><a href="{% url 'blog:unpublished_post_list' %}">Неопубликованные посты</a></li>
+                <li><a href="{% url 'blog:post_create' %}">Создать пост</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    <footer>
+        <p>&copy; {{ current_year }} Мой блог</p>
+    </footer>
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script> <!-- Подключение Bootstrap JS -->
+</body>
+</html>
