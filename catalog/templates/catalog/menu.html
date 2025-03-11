@@ -4,5 +4,15 @@
         <a class="p-2 btn btn-outline-primary" href="/">Каталог</a>
         <a class="p-2 btn btn-outline-primary" href="/contacts/">Контакты</a>
         <a class="p-2 btn btn-outline-primary" href="products/create/">Создать товар</a>
+        <a class="p-2 btn btn-outline-primary" href="/users/register/">Регистрация</a>
+        <a class="p-2 btn btn-outline-primary" href="/users/login/">Авторизация</a>
+
+        {% if user.is_authenticated %}
+            <a href="{% url 'users:edit_profile' %}" class="p-2 btn btn-outline-primary">Редактировать профиль</a>
+            <a href="{% url 'users:logout_confirm' %}" class="p-2 btn btn-outline-primary">Выйти</a>
+            <form action="{% url 'users:delete_user' %}" method="get" style="display:inline;">
+                <button type="submit" class="p-2 btn btn-danger">Удалить аккаунт</button>
+            </form>
+        {% endif %}
     </nav>
 </div>
