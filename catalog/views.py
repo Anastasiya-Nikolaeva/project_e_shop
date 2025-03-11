@@ -1,8 +1,10 @@
 from django.http import Http404
 from django.shortcuts import render
+from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, ListView, TemplateView
+from django.views.generic import DetailView, ListView, TemplateView, CreateView, UpdateView, DeleteView
 
+from catalog.forms import ProductForm
 from catalog.models import Product
 
 
@@ -36,6 +38,9 @@ class ProductsListView(ListView):
     template_name = "catalog/products_list.html"
     context_object_name = "products"
 
+    def get_queryset(self):
+        return Product.objects.order_by('created_at')
+
 
 class ProductDetailView(DetailView):
     model = Product
@@ -47,3 +52,27 @@ class ProductDetailView(DetailView):
         if obj is None:
             raise Http404("Продукт не найден")
         return obj
+
+
+class ProductCreateView(CreateView):
+    model = Product
+    form_class = ProductForm
+    template_name = "catalog/product_form.html"
+    success_url = reverse_lazy('catalog:products_list')
+
+
+class ProductUpdateView(UpdateView):
+    model = Product
+    form_class = ProductForm
+    template_name = "catalog/product_form.html"
+    success_url = reverse_lazy('catalog:products_list')
+
+    def form_valid(self, form):
+        return super().form_valid(form)
+
+
+class ProductDeleteView(DeleteView):
+    model = Product
+    template_name = "catalog/product_confirm_delete.html"
+    success_url = reverse_lazy('catalog:products_list')
+

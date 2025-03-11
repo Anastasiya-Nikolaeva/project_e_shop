@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Список продуктов</title>
@@ -12,10 +12,14 @@
         <ul class="list-group">
             {% for product in products %}
                 <li class="list-group-item">
-                    {{ product.name }} - {{ product.category }} - {{ product.description | truncatechars:100 }} - {{ product.price }}
+                    <a href="{% url 'catalog:product_detail' product.id %}">{{ product.id }}. {{ product.name }}</a>
+                    Категория: {{ product.category.name }} - Описание: {{ product.description | truncatechars:100 }} - Цена: {{ product.price }} руб.
                 </li>
             {% endfor %}
         </ul>
+        <div class="mt-4">
+            <a href="{% url 'catalog:home' %}" class="btn btn-primary">На главную</a>
+        </div>
     </div>
 
     <script src='/static/js/bootstrap.bundle.min.js'></script>
