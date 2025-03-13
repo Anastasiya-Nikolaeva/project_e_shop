@@ -1,0 +1,14 @@
+{% extends 'catalog/base.html' %}
+
+{% block title %}Удаление аккаунта{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Вы уверены, что хотите удалить свой аккаунт?</h2>
+    <form action="{% url 'users:delete_user' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Да, удалить аккаунт</button>
+    </form>
+    <a href="{% url 'catalog:home' %}" class="btn btn-secondary">Отмена</a>
+</div>
+{% endblock %}
