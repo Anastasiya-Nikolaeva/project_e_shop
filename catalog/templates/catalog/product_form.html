@@ -4,11 +4,11 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>{% if object %}Редактировать{% else %}Создать{% endif %} продукт</h2>
+    <h2>{% if object %}Редактировать продукт: {{ object.name }}{% else %}Создать новый продукт{% endif %}</h2>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <button type="submit" class="btn btn-primary">{% if object %}Сохранить изменения{% else %}Создать продукт{% endif %}</button>
     </form>
     <a href="{% url 'catalog:products_list' %}" class="btn btn-secondary mt-2">Назад к списку продуктов</a>
 </div>

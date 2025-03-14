@@ -42,10 +42,8 @@ class ProductForm(forms.ModelForm):
     def clean_photo(self):
         photo = self.cleaned_data.get('photo')
         if photo:
-            # Проверка формата файла
             if not (photo.name.endswith('.jpg') or photo.name.endswith('.jpeg') or photo.name.endswith('.png')):
                 raise forms.ValidationError("Файл должен быть в формате JPEG или PNG.")
-            # Проверка размера файла
             if photo.size > 5 * 1024 * 1024:  # 5 МБ
                 raise forms.ValidationError("Размер файла не должен превышать 5 МБ.")
         return photo
