@@ -1,12 +1,13 @@
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView, CreateView, UpdateView, DeleteView
 
 from catalog.forms import ProductForm
 from catalog.models import Product
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 
 class HomeView(TemplateView):
@@ -49,10 +50,18 @@ class ProductDetailView(DetailView):
     context_object_name = "product"
 
     def get_object(self, queryset=None):
-        obj = super().get_object(queryset)
+        obj = super().get_object()
         if obj is None:
             raise Http404("Продукт не найден")
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['can_edit'] = self.request.user.has_perm('catalog.change_product')
+        context['can_delete'] = self.request.user.has_perm('catalog.delete_product')
+        context['can_unpublish'] = self.request.user.has_perm('catalog.can_unpublish_product')
+        context['can_add'] = self.request.user.has_perm('catalog.add_product')
+        return context
 
 
 class ProductCreateView(LoginRequiredMixin, CreateView):
@@ -61,18 +70,64 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     template_name = "catalog/product_form.html"
     success_url = reverse_lazy('catalog:products_list')
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
-class ProductUpdateView(LoginRequiredMixin, UpdateView):
+    def form_invalid(self, form):
+        return super().form_invalid(form)
+
+
+class ProductUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
     template_name = "catalog/product_form.html"
     success_url = reverse_lazy('catalog:products_list')
+    permission_required = 'catalog.change_product'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.owner != request.user and not request.user.has_perm('catalog.change_product'):
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object'] = self.get_object()
+        return context
 
     def form_valid(self, form):
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        print(form.errors)  # Вывод ошибок в консоль
+        return super().form_invalid(form)
 
-class ProductDeleteView(LoginRequiredMixin, DeleteView):
+
+class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Product
     template_name = "catalog/product_confirm_delete.html"
     success_url = reverse_lazy('catalog:products_list')
+    permission_required = 'catalog.delete_product'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.owner != request.user and not request.user.has_perm('catalog.delete_product'):
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def handle_no_permission(self):
+        return render(self.request, 'catalog/no_permission.html', status=403)
+
+
+class ProductUnpublishView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'catalog.can_unpublish_product'
+
+    def post(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        product.is_published = False
+        product.save()
+        return redirect('catalog:products_list')
+
+    def handle_no_permission(self):
+        return render(self.request, 'catalog/no_permission.html', status=403)

@@ -1,4 +1,7 @@
+from django.conf import settings
 from django.db import models
+
+import users
 
 
 class Category(models.Model):
@@ -30,6 +33,8 @@ class Product(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True, verbose_name="Дата последнего изменения"
     )
+    is_published = models.BooleanField(default=False, verbose_name="Опубликован")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Владелец", null=True)
 
     def __str__(self):
         return self.name
@@ -38,3 +43,7 @@ class Product(models.Model):
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
         ordering = ["name"]
+        permissions = [
+            ("can_unpublish_product", "Can unpublish product"),
+            ("can_delete_product", "Can delete product"),
+        ]

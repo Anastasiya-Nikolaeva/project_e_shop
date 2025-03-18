@@ -32,8 +32,18 @@
 
         <div class="mt-4 mb-4">
             <a href="{% url 'catalog:products_list' %}" class="btn btn-primary">К списку продуктов</a>
-            <a href="{% url 'catalog:product_edit' product.id %}" class="btn btn-warning">Редактировать</a>
-            <a href="{% url 'catalog:product_delete' product.id %}" class="btn btn-danger">Удалить</a>
+            {% if product.owner == request.user or can_edit %}
+                <a href="{% url 'catalog:product_edit' product.id %}" class="btn btn-warning">Редактировать</a>
+            {% endif %}
+            {% if product.owner == request.user or can_delete %}
+                <a href="{% url 'catalog:product_delete' product.id %}" class="btn btn-danger">Удалить</a>
+            {% endif %}
+            {% if can_unpublish %}
+                <form action="{% url 'catalog:unpublish_product' product.id %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Отменить публикацию</button>
+                </form>
+            {% endif %}
         </div>
     </div>
     <script src='/static/js/bootstrap.bundle.min.js'></script>
