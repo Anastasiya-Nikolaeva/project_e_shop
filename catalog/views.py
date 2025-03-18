@@ -1,13 +1,24 @@
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.generic import DetailView, ListView, TemplateView, CreateView, UpdateView, DeleteView
+from django.views.decorators.cache import cache_page
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
 
 from catalog.forms import ProductForm
 from catalog.models import Product
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from catalog.services import get_products_by_category
 
 
 class HomeView(TemplateView):
@@ -41,9 +52,10 @@ class ProductsListView(ListView):
     context_object_name = "products"
 
     def get_queryset(self):
-        return Product.objects.order_by('created_at')
+        return Product.objects.order_by("created_at")
 
 
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class ProductDetailView(DetailView):
     model = Product
     template_name = "catalog/product_detail.html"
@@ -57,10 +69,12 @@ class ProductDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['can_edit'] = self.request.user.has_perm('catalog.change_product')
-        context['can_delete'] = self.request.user.has_perm('catalog.delete_product')
-        context['can_unpublish'] = self.request.user.has_perm('catalog.can_unpublish_product')
-        context['can_add'] = self.request.user.has_perm('catalog.add_product')
+        context["can_edit"] = self.request.user.has_perm("catalog.change_product")
+        context["can_delete"] = self.request.user.has_perm("catalog.delete_product")
+        context["can_unpublish"] = self.request.user.has_perm(
+            "catalog.can_unpublish_product"
+        )
+        context["can_add"] = self.request.user.has_perm("catalog.add_product")
         return context
 
 
@@ -68,7 +82,7 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     model = Product
     form_class = ProductForm
     template_name = "catalog/product_form.html"
-    success_url = reverse_lazy('catalog:products_list')
+    success_url = reverse_lazy("catalog:products_list")
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
@@ -82,18 +96,20 @@ class ProductUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
     model = Product
     form_class = ProductForm
     template_name = "catalog/product_form.html"
-    success_url = reverse_lazy('catalog:products_list')
-    permission_required = 'catalog.change_product'
+    success_url = reverse_lazy("catalog:products_list")
+    permission_required = "catalog.change_product"
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.object.owner != request.user and not request.user.has_perm('catalog.change_product'):
+        if self.object.owner != request.user and not request.user.has_perm(
+            "catalog.change_product"
+        ):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['object'] = self.get_object()
+        context["object"] = self.get_object()
         return context
 
     def form_valid(self, form):
@@ -107,27 +123,50 @@ class ProductUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
 class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Product
     template_name = "catalog/product_confirm_delete.html"
-    success_url = reverse_lazy('catalog:products_list')
-    permission_required = 'catalog.delete_product'
+    success_url = reverse_lazy("catalog:products_list")
+    permission_required = "catalog.delete_product"
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.object.owner != request.user and not request.user.has_perm('catalog.delete_product'):
+        if self.object.owner != request.user and not request.user.has_perm(
+            "catalog.delete_product"
+        ):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
     def handle_no_permission(self):
-        return render(self.request, 'catalog/no_permission.html', status=403)
+        return render(self.request, "catalog/no_permission.html", status=403)
 
 
 class ProductUnpublishView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    permission_required = 'catalog.can_unpublish_product'
+    permission_required = "catalog.can_unpublish_product"
 
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
         product.is_published = False
         product.save()
-        return redirect('catalog:products_list')
+        return redirect("catalog:products_list")
 
     def handle_no_permission(self):
-        return render(self.request, 'catalog/no_permission.html', status=403)
+        return render(self.request, "catalog/no_permission.html", status=403)
+
+
+class ProductsByCategoryView(ListView):
+    template_name = "catalog/products_by_category.html"
+    context_object_name = "products"
+
+    def get_queryset(self):
+        category_id = self.kwargs["category_id"]
+        cache_key = f"products_by_category_{category_id}"
+        products = cache.get(cache_key)
+
+        if products is None:
+            products = get_products_by_category(category_id)
+            cache.set(cache_key, products, 60 * 15)
+
+        return products
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["category_id"] = self.kwargs["category_id"]
+        return context
