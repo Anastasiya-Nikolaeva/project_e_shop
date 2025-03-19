@@ -52,7 +52,16 @@ class ProductsListView(ListView):
     context_object_name = "products"
 
     def get_queryset(self):
-        return Product.objects.order_by("created_at")
+        # Используем кеш для получения списка продуктов
+        cache_key = "all_products"
+        products = cache.get(cache_key)
+
+        if products is None:
+            # Если данных нет в кеше, получаем их из базы данных
+            products = list(Product.objects.order_by("created_at"))
+            cache.set(cache_key, products, 60 * 15)
+
+        return products
 
 
 @method_decorator(cache_page(60 * 15), name="dispatch")
@@ -85,8 +94,10 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("catalog:products_list")
 
     def form_valid(self, form):
-        form.instance.owner = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        # Очищаем кеш после создания продукта
+        cache.delete("all_products")
+        return response
 
     def form_invalid(self, form):
         return super().form_invalid(form)
@@ -113,7 +124,10 @@ class ProductUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView)
         return context
 
     def form_valid(self, form):
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        # Очищаем кеш после обновления продукта
+        cache.delete("all_products")
+        return response
 
     def form_invalid(self, form):
         print(form.errors)  # Вывод ошибок в консоль
@@ -125,6 +139,12 @@ class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView)
     template_name = "catalog/product_confirm_delete.html"
     success_url = reverse_lazy("catalog:products_list")
     permission_required = "catalog.delete_product"
+
+    def delete(self, request, *args, **kwargs):
+        response = super().delete(request, *args, **kwargs)
+        # Очищаем кеш после удаления продукта
+        cache.delete("all_products")
+        return response
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
