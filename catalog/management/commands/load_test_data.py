@@ -13,6 +13,6 @@ class Command(BaseCommand):
         Category.objects.all().delete()
 
         self.stdout.write(self.style.SUCCESS('Loading fixtures...'))
-        call_command('loaddata', 'categories_products.json')  # Замените на имя вашего файла
+        call_command('loaddata', 'categories_products.json')
 
         self.stdout.write(self.style.SUCCESS('Successfully loaded test data'))

@@ -1,8 +1,6 @@
 from django.conf import settings
 from django.db import models
 
-import users
-
 
 class Category(models.Model):
     name = models.CharField(max_length=150, verbose_name="Наименование")
@@ -34,7 +32,12 @@ class Product(models.Model):
         auto_now=True, verbose_name="Дата последнего изменения"
     )
     is_published = models.BooleanField(default=False, verbose_name="Опубликован")
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Владелец", null=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="Владелец",
+        null=True,
+    )
 
     def __str__(self):
         return self.name
